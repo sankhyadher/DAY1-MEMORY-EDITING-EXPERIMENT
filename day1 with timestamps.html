@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Casino Slot Machine Experiment</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: radial-gradient(circle at 50% 20%, #2d1a09 0%, #1a0d04 100%); color: #eee; margin: 0; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .hidden { display: none !important; }
+    .center { text-align: center; }
+    .slot-machine-layout { display: flex; flex-direction: row; gap: 32px; align-items: flex-start; }
+    .slot-machine { background: linear-gradient(135deg, #3b1e00 60%, #a67c52 100%); border-radius: 24px; padding: 32px 24px 24px 24px; box-shadow: 0 8px 32px #000a; margin-bottom: 24px; flex: 3; position: relative;}
+    .slot-machine::before {
+      content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
+      background: repeating-linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05) 20px, transparent 40px, transparent 60px);
+      border-radius: 24px; pointer-events: none;
+    }
+    .reels { display: flex; justify-content: center; gap: 24px; margin-bottom: 20px; }
+    .reel {
+      width: 140px; height: 140px; background: radial-gradient(circle, #fffbe6 60%, #f1c40f 100%);
+      border: 6px solid #bfa145; border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; box-shadow: 0 2px 12px #000a, 0 0 24px #fff70066 inset;
+      transition: box-shadow 0.2s;
+    }
+    .reels.sparkle .reel {
+      box-shadow: 0 0 32px #fff700, 0 0 48px #fff70099, 0 0 24px #fff70066 inset;
+      animation: sparkle-reel 0.4s alternate infinite;
+    }
+    @keyframes sparkle-reel {
+      0% { box-shadow: 0 0 32px #fff700, 0 0 48px #fff70099, 0 0 24px #fff70066 inset; }
+      100% { box-shadow: 0 0 64px #fff700, 0 0 96px #fff700cc, 0 0 48px #fff70099 inset; }
+    }
+    .chips { display: flex; justify-content: center; gap: 18px; margin-bottom: 18px; }
+    .chip {
+      width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle, #ffe066 60%, #e1b700 100%);
+      border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.3rem; cursor: pointer; transition: border 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 10px #000a;
+      position: relative;
+      margin: 0 2px;
+    }
+    .chip.selected { border: 4px solid #ff3; box-shadow: 0 0 16px #fff700; }
+    .shape-chip svg { width: 40px; height: 40px; }
+    .spin-btn {
+      background: linear-gradient(90deg, #ff2d2d 60%, #ffb300 100%);
+      color: #fff; padding: 16px 40px; border: none; border-radius: 12px; font-size: 1.5rem; cursor: pointer; margin-bottom: 14px;
+      box-shadow: 0 2px 8px #000a, 0 0 16px #fff70055;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      font-weight: bold;
+      letter-spacing: 1px;
+      transition: filter 0.2s;
+    }
+    .spin-btn:disabled { background: #888; filter: grayscale(0.5); }
+    .total-winnings, .wallet {
+      background: #222; color: #ffd700; font-size: 1.3rem; padding: 8px 32px; border-radius: 10px; margin: 0 auto 16px auto; display: inline-block; font-weight: bold; box-shadow: 0 2px 8px #000a;
+      text-shadow: 0 0 6px #fff700;
+    }
+    .wallet { color: #00ffae; margin-left: 16px; }
+    .message { font-size: 1.25rem; margin: 14px 0; min-height: 40px;}
+    .social { color: #0f0; font-weight: bold; }
+    .nogain { color: #aaa; }
+    .win-amount { color: #ffd700; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 8px #fff700; }
+    .instructions, .bisbas, .memoryForm, .probe { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
+    .question { margin-bottom: 18px; }
+    .leaderboard { background: #1a1203; border-radius: 16px; padding: 18px 16px; max-width: 260px; margin: 0; box-shadow: 0 2px 12px #000a; flex: 1;}
+    .leaderboard h3 { margin: 0 0 10px 0; color: #ffd700; text-align: center; letter-spacing: 1px; }
+    .leaderboard-list { list-style: none; padding: 0; margin: 0; }
+    .leaderboard-list li { padding: 6px 0; font-size: 1.1rem; }
+    .player { color: #fff700; font-weight: bold; background: #3b2e00; border-radius: 6px; padding: 2px 8px;}
+    .sparkle-text {
+      animation: sparkle-text 0.7s alternate infinite;
+      text-shadow: 0 0 12px #fff700, 0 0 24px #fff70099;
+    }
+    @keyframes sparkle-text {
+      0% { text-shadow: 0 0 12px #fff700, 0 0 24px #fff70099; }
+      100% { text-shadow: 0 0 32px #fff700, 0 0 48px #fff700cc; }
+    }
+    .reels-bg { background: repeating-linear-gradient(135deg, #ffd70022 0 8px, #fff0 8px 16px); border-radius: 20px;
+      padding: 10px; margin-bottom: 10px; position: relative;
+    }
+    .coin-shower .coin {
+      position: absolute; width: 28px; height: 28px; pointer-events: none;
+      background: radial-gradient(circle, #ffe066 60%, #e1b700 100%);
+      border-radius: 50%; border: 2px solid #fff;
+      animation: coin-fall 1.1s cubic-bezier(.4,1.5,.7,1.1) forwards;
+      z-index: 10;
+    }
+    @keyframes coin-fall {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(180px) scale(1.3); opacity: 0; }
+    }
+    .thumbs-down { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); font-size: 4rem; color: #ff2d2d; z-index: 20; }
+    .thumbs-down.hidden { display: none !important; }
+    .liked-symbols-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      justify-content: center;
+      margin: 18px 0;
+    }
+    .liked-symbol-opt {
+      border: 2px solid #444;
+      border-radius: 10px;
+      padding: 6px;
+      background: #222;
+      cursor: pointer;
+      transition: border 0.2s, background 0.2s;
+      width: 88px;
+      height: 88px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .liked-symbol-opt.selected {
+      border: 2px solid #0f0;
+      background: #333;
+      box-shadow: 0 0 12px #0f0, 0 0 24px #0f08;
+    }
+    @media (max-width: 900px) {
+      .slot-machine-layout { flex-direction: column; }
+      .leaderboard { max-width: 100%; margin-top: 24px;}
+    }
+    .symbol-opt svg, .probe-btn svg, .reel svg, .shape-chip svg {
+      width: 72px;
+      height: 72px;
+      display: block;
+      margin: 0 auto;
+    }
+        .symbols-list { display: flex; gap: 16px; margin-top: 8px; }
+    .symbol-opt { border: 2px solid #666; border-radius: 8px; padding: 6px; background: #222; cursor: pointer; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;}
+    .symbol-opt.selected { border: 2px solid #0f0; background: #444; }
+    .probe-pair { display: flex; gap: 32px; justify-content: center; margin: 18px 0; }
+    .probe-btn { border: 2px solid #888; background: #222; border-radius: 8px; padding: 8px; cursor: pointer; width: 80px; height: 80px; }
+    .probe-btn.selected { border: 2px solid #0f0; }
+    button { padding: 8px 18px; border-radius: 6px; border: none; background: #0a8; color: #fff; font-weight: bold; cursor: pointer; }
+}
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Consent Form -->
+<form class="consent" id="consentForm" onsubmit="event.preventDefault(); showParticipantForm();">
+  <h2>INFORMED CONSENT FORM</h2>
+  <div style="margin-bottom:10px;">
+    <b>Title of Study:</b><br>
+    Exploring the effectiveness of novel protocol on reinstatement of appetitive memory
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Principal Investigator:</b><br>
+    Riya Sharma<br>
+    Rekhi Centre of Excellence for the Science of Happiness<br>
+    IIT Kharagpur<br>
+    8194006406
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Introduction</b><br>
+    You are invited to take part in a research study about how people respond to different types of images and tasks related to card games. Please read this form carefully and ask any questions you may have before agreeing to participate.
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Purpose of the Study</b><br>
+    The purpose of this research is to better understand how people process and respond to certain experiences and tasks involving games, feedback, and brief physiological activities. The results may help us learn more about memory, emotion, and reinstatement in everyday life.
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Procedures</b>
+    <ul>
+      <li>You will attend three sessions on three different days.</li>
+      <li>You will play a computerized slot machine game, complete breathing and feedback tasks, and respond to a series of images and questions on a computer.</li>
+      <li>During some parts of the study, you may be asked to briefly immerse your hand in cool water.</li>
+      <li>Your physiological responses (such as skin conductance and heart rate) may be measured at certain times.</li>
+      <li>The total time commitment is approximately 30–90 minutes across all sessions.</li>
+    </ul>
+    Some details about the specific tasks are not described here to ensure the scientific validity of the study. All procedures are designed to be safe for healthy adults. You will receive a full explanation of the study’s purpose and procedures at the end of your participation (debriefing).
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Risks and Discomforts</b>
+    <ul>
+      <li>You may experience mild discomfort from the cool water task, which is brief and can be stopped at any time.</li>
+      <li>Some participants may find certain feedback or tasks mildly frustrating or emotionally activating.</li>
+      <li>Please inform the researcher if you have a history of heart problems, Raynaud’s disease, or sensitivity to cold.</li>
+      <li>You may withdraw from the study at any time without penalty.</li>
+    </ul>
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Benefits</b>
+    <ul>
+      <li>There is no direct benefit to you, but your participation will help advance scientific knowledge about memory and decision-making.</li>
+    </ul>
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Confidentiality</b>
+    <ul>
+      <li>All information collected will be kept strictly confidential. Your data will be coded with a number, not your name.</li>
+      <li>Only the research team will have access to the data.</li>
+      <li>Results may be published in scientific journals, but no identifying information will be included.</li>
+    </ul>
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Voluntary Participation</b>
+    <ul>
+      <li>Your participation is voluntary. You may refuse to participate or withdraw at any time, without penalty or loss of benefits to which you are otherwise entitled.</li>
+      <li>You may skip any question or task that makes you uncomfortable.</li>
+    </ul>
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Questions</b><br>
+    If you have questions about this study, please contact:<br>
+    Riya Sharma, 8194006406
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>Debriefing</b><br>
+    At the end of your participation, you will receive a complete explanation of the study’s purpose, procedures, and any information that was not disclosed before or during the study. You will have the opportunity to ask questions, and, if you wish, you may request that your data be withdrawn after learning the full details.
+  </div>
+  <div style="margin-bottom:10px;">
+    <b>CONSENT</b><br>
+    I have read and understood the information above. I have had the opportunity to ask questions and have received satisfactory answers. I voluntarily agree to participate in this study.
+  </div>
+  <label>
+    <input type="checkbox" id="consentCheck" required>
+    I have read the information above and consent to participate.
+  </label>
+  <br><br>
+  <button class="submit-btn" type="submit">Continue</button>
+</form>
+
+
+  <!-- Participant Info Form -->
+  <form class="bisbas hidden" id="participantForm" onsubmit="event.preventDefault(); showLikedShapes();">
+    <h2>Participant Information</h2>
+    <div class="question"><label>Participant ID: <input type="text" id="participantId" required></label></div>
+    <div class="question"><label>Session ID: <input type="text" id="sessionId" required></label></div>
+    <div class="question"><label>Group Number: <input type="number" id="groupNumber" required min="1"></label></div>
+    <div class="question"><label>Name: <input type="text" id="name" required></label></div>
+    <div class="question"><label>Age: <input type="number" id="age" required min="18" max="99"></label></div>
+    <div class="question"><label>Gender:
+      <select id="gender" required>
+        <option value="">Select...</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </label></div>
+    <button class="submit-btn" type="submit">Continue</button>
+  </form>
+
+  <!-- Liked Shapes (no distractors) -->
+  <form class="bisbas hidden" id="likedShapesForm" onsubmit="event.preventDefault(); validateLikedShapes();">
+    <h2>Shape Preferences</h2>
+    <div class="question">
+      <label>Please mark all the shapes that you like:</label>
+      <div class="liked-symbols-list" id="likedSymbolsList"></div>
+    </div>
+    <div id="likedShapesError" style="color:#ff7070; margin-bottom:10px; display:none;"></div>
+    <button class="submit-btn" type="submit">Continue</button>
+  </form>
+
+  <!-- BIS-BAS Scale -->
+  <form class="bisbas hidden" id="bisbasForm" onsubmit="event.preventDefault(); showInstructions();">
+    <h2>BIS-BAS Scale</h2>
+    <div id="bisbasQuestions"></div>
+    <button class="submit-btn" type="submit">Continue</button>
+  </form>
+
+  <!-- Game Instructions -->
+  <div class="instructions hidden" id="instructions">
+    <h2>Welcome to the Casino Slot Machine Game!</h2>
+    <ul>
+      <li>You will play <b>110 rounds</b>. In each round, place your bet using casino chips, and choose a shape to bet on.</li>
+      <li><b>Higher the bet, higher the risk and potential reward.</b></li>
+      <li>Try to climb the leaderboard by winning more!</li>
+      <li>Press the <b>SPIN</b> button to play each round.</li>
+      <li>You start with <b>$2000</b> in your wallet. If you run out, you can't play further.</li>
+      <li>Good luck!</li>
+    </ul>
+    <button class="submit-btn" onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- Slot Machine Game -->
+  <div class="slot-machine-layout hidden" id="gameLayout">
+    <div id="game" class="slot-machine">
+      <div class="center">
+        <h2>Slot Machine Game</h2>
+        <div id="trialInfo"></div>
+      </div>
+      <div>
+        <span class="total-winnings" id="totalWinnings">Total Winnings: $0</span>
+        <span class="wallet" id="walletDisplay">Wallet: $2000</span>
+      </div>
+      <div class="reels-bg" style="position:relative;">
+        <div class="reels" id="reels"></div>
+        <div class="coin-shower" id="coinShower"></div>
+        <div class="thumbs-down hidden" id="thumbsDown"></div>
+      </div>
+      <div class="chips" id="chips">
+        <div class="chip" data-value="1">$1</div>
+        <div class="chip" data-value="5">$5</div>
+        <div class="chip" data-value="10">$10</div>
+        <div class="chip" data-value="20">$20</div>
+      </div>
+      <div class="chips" id="shapeChips" style="margin-bottom:18px;">
+        <div class="chip shape-chip" data-shape="sphere" title="Bet on Sphere"></div>
+        <div class="chip shape-chip" data-shape="cube" title="Bet on Cube"></div>
+        <div class="chip shape-chip" data-shape="pyramid" title="Bet on Pyramid"></div>
+        <div class="chip shape-chip" data-shape="cylinder" title="Bet on Cylinder"></div>
+      </div>
+      <div class="center" id="gameMessage"></div>
+      <div class="center" style="margin-top:10px;">
+        <button class="spin-btn" id="spinBtn" onclick="spin()">SPIN</button>
+      </div>
+    </div>
+    <div class="leaderboard" id="leaderboard">
+      <h3>Leaderboard</h3>
+      <ol class="leaderboard-list" id="leaderboardList"></ol>
+    </div>
+  </div>
+
+ <!-- Affective Valence/Arousal Scale -->
+  <form class="affectiveForm hidden" id="affectiveForm">
+    <h2>Affective Ratings</h2>
+    <div class="affective-layout">
+      <div class="affective-left">
+        <div class="affective-instructions">
+          Please rate the question using <b>BOTH the sliders</b> .<br>
+        </div>
+        <div class="affective-slider-block">
+          <div class="affective-slider-label">
+            <img src="https://img.icons8.com/emoji/48/000000/crying-face.png" class="affective-slider-face" alt="Sad">
+            <input type="range" min="1" max="9" value="5" class="affective-slider" id="valenceSlider">
+            <img src="https://em-content.zobj.net/thumbs/240/apple/354/grinning-face_1f600.png" alt="Happy Emoji" width="42" height="42">
+          </div>
+          <div class="affective-slider-caption">“How pleasant or unpleasant does the memory of the slot machine game feel to you right now?”</b></div>
+        </div>
+        <div class="affective-slider-block">
+          <div class="affective-slider-label">
+            <img src="https://img.icons8.com/emoji/48/000000/sleeping-face.png" class="affective-slider-face" alt="Low arousal">
+            <input type="range" min="1" max="9" value="5" class="affective-slider" id="arousalSlider">
+            <img src="https://img.icons8.com/emoji/48/000000/astonished-face.png" class="affective-slider-face" alt="High arousal">
+          </div>
+          <div class="affective-slider-caption">“How emotionally activated or calm do you feel while recalling the memory of the slot machine game?”</b></div>
+        </div>
+        <button class="submit-btn" type="submit">Continue</button>
+      </div>
+      <div>
+      </div>
+    </div>
+  </form>
+
+
+  <!-- Memory & Contingency Awareness Tasks -->
+  <form class="memoryForm hidden" id="memoryForm">
+    <h2>Memory and Awareness</h2>
+    <div class="question">
+      <label>Please mark all the shapes present in slot machine game (you can also mark if your response is 'maybe'):</label>
+      <div class="symbols-list" id="memorySymbolsList"></div>
+    </div>
+    <div class="question">
+      <label>Please mark all the shapes that leads you to win:</label>
+      <div class="symbols-list" id="contingencySymbolsList"></div>
+    </div>
+    <button class="submit-btn" type="submit">Continue</button>
+  </form>
+
+  <!-- Binary Probe Task -->
+  <div class="probe hidden" id="probeTask">
+    <h2>Binary Probe Task</h2>
+    <div id="probePairs"></div>
+    <button class="submit-btn" id="finishBtn" onclick="finishExperiment()" disabled>Finish</button>
+  </div>
+
+  <!-- End -->
+  <div class="center hidden" id="thankYou">
+    <h2>Thank you for participating!</h2>
+    <p>Your responses have been recorded.</p>
+    <div class="footer">Casino Slot Machine Experiment &copy; 2025</div>
+  </div>
+</div>
+
+  <!-- Sound for win -->
+  <audio id="winSound" src="https://orangefreesounds.com/wp-content/uploads/2022/06/Casino-winner-sound-effect.mp3"></audio>
+
+</div>
+<script>
+/* --- Sound Helper --- */
+const winSound = document.getElementById('winSound');
+const clapSound = document.getElementById('clapSound');
+// Add this function:
+
+// --- Sound Helper ---
+function playAudioFor2Seconds(audioElement) {
+  if (!audioElement) return;
+  audioElement.currentTime = 0;
+  audioElement.play();
+  setTimeout(() => {
+    audioElement.pause();
+    audioElement.currentTime = 0;
+  }, 2000);
+}
+
+// --- 3D SVG SHAPES ---
+const shapeSVGs = {
+  'sphere': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><radialGradient id="g1" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3f"/></radialGradient></defs><ellipse cx="40" cy="40" rx="32" ry="32" fill="url(#g1)" stroke="#5c2a7c" stroke-width="4"/></svg>`,
+  'cube': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#3a6"/></linearGradient></defs><rect x="16" y="16" width="48" height="48" rx="8" fill="url(#g2)" stroke="#2a7c5c" stroke-width="4"/></svg>`,
+  'pyramid': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3f"/></linearGradient></defs><polygon points="40,12 68,68 12,68" fill="url(#g3)" stroke="#5c2a7c" stroke-width="4"/></svg>`,
+  'cylinder': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#3a6"/></linearGradient></defs><ellipse cx="40" cy="20" rx="24" ry="10" fill="#fff" opacity="0.5"/><rect x="16" y="20" width="48" height="40" rx="24" fill="url(#g4)" stroke="#2a7c5c" stroke-width="4"/><ellipse cx="40" cy="60" rx="24" ry="10" fill="#3a6" stroke="#2a7c5c" stroke-width="4"/></svg>`,
+  'hexPrism': `<svg width="40" height="40" viewBox="0 0 80 80"><polygon points="20,30 40,12 60,30 60,50 40,68 20,50" fill="#fa3" stroke="#fa3" stroke-width="4"/></svg>`,
+  'starPrism': `<svg width="40" height="40" viewBox="0 0 80 80"><polygon points="40,12 47,32 68,32 51,46 57,66 40,54 23,66 29,46 12,32 33,32" fill="#fa3" stroke="#fa3" stroke-width="4"/></svg>`,
+  'capsule': `<svg width="40" height="40" viewBox="0 0 80 80"><rect x="20" y="24" width="40" height="32" rx="20" fill="#fff" stroke="#fa3" stroke-width="4"/><ellipse cx="40" cy="24" rx="20" ry="12" fill="#fa3"/><ellipse cx="40" cy="56" rx="20" ry="12" fill="#fa3"/></svg>`
+};
+const allSymbols = ['sphere', 'cube', 'pyramid', 'cylinder'];
+const winningCombos = [['sphere','sphere','sphere'], ['pyramid','pyramid','pyramid']];
+const nogainCombos = [['cube','cube','cube'], ['cylinder','cylinder','cylinder']];
+const distractorSymbols = ['hexPrism', 'starPrism', 'capsule'];
+const rewardSymbols = ['sphere', 'pyramid'];
+
+let participant = {
+  participantId: '', sessionId: '', groupNumber: '',
+  name: '', age: '', gender: '',
+  likedShapes: [],
+  bisbas: {},
+  bisbasScores: {},
+  trials: [],
+  totalWinnings: 0,
+  timestamps: {}
+};
+
+let trialOrder = [];
+let trialNum = 0;
+let betAmount = 1;
+let betShape = 'sphere';
+let leaderboard = [];
+let totalWinnings = 0;
+let wallet = 2000;
+let winCount = 0;
+
+// Consent
+function showParticipantForm() {
+  participant.timestamps.consent = Date.now();
+  document.getElementById('consentForm').classList.add('hidden');
+  document.getElementById('participantForm').classList.remove('hidden');
+}
+
+// Liked Shapes
+function showLikedShapes() {
+  participant.timestamps.participantInfo = Date.now();
+  participant.participantId = document.getElementById('participantId').value.trim();
+  participant.sessionId = document.getElementById('sessionId').value.trim();
+  participant.groupNumber = document.getElementById('groupNumber').value;
+  participant.name = document.getElementById('name').value.trim();
+  participant.age = document.getElementById('age').value;
+  participant.gender = document.getElementById('gender').value;
+  document.getElementById('participantForm').classList.add('hidden');
+  document.getElementById('likedShapesForm').classList.remove('hidden');
+  renderLikedShapes();
+}
+function renderLikedShapes() {
+  const list = document.getElementById('likedSymbolsList');
+  list.innerHTML = '';
+  participant.likedShapes = [];
+  allSymbols.forEach(sym => {
+    const div = document.createElement('div');
+    div.className = 'liked-symbol-opt';
+    div.innerHTML = shapeSVGs[sym] || '';
+    div.onclick = function() {
+      div.classList.toggle('selected');
+      if (div.classList.contains('selected')) {
+        if (!participant.likedShapes.includes(sym)) participant.likedShapes.push(sym);
+      } else {
+        participant.likedShapes = participant.likedShapes.filter(s => s !== sym);
+      }
+    };
+    list.appendChild(div);
+  });
+}
+function validateLikedShapes() {
+  if (participant.likedShapes.length === 0) {
+    document.getElementById('likedShapesError').innerText = "Please select at least one shape you like.";
+    document.getElementById('likedShapesError').style.display = "block";
+    return false;
+  }
+  participant.timestamps.likedShapes = Date.now();
+  document.getElementById('likedShapesError').style.display = "none";
+  document.getElementById('likedShapesForm').classList.add('hidden');
+  showBISBAS();
+  return true;
+}
+
+// BIS-BAS
+const bis_bas_questions = [
+  "I worry about making mistakes.",
+  "When I get something I want, I feel excited and energized.",
+  "I feel worried when I think I have done poorly at something.",
+  "I go out of my way to get things I want.",
+  "I often act on the spur of the moment.",
+  "I feel anxious when I am uncertain about the future.",
+  "I am always willing to try something new if I think it will be fun.",
+  "I get nervous when I think about what could go wrong.",
+  "I am motivated by the possibility of gaining rewards.",
+  "I often do things to get attention.",
+  "I feel uneasy when I have to make decisions.",
+  "I enjoy taking risks.",
+  "I get upset when I don't get what I want.",
+  "I am quick to respond to opportunities.",
+  "I worry about bad things happening.",
+  "I like to be active and busy.",
+  "I get anxious when I think about the future.",
+  "I am driven to achieve my goals.",
+  "I feel tense when I am under pressure.",
+  "I like to have fun and enjoy life.",
+  "I get nervous in social situations.",
+  "I am persistent in pursuing my goals.",
+  "I feel restless when I have to wait.",
+  "I am easily distracted by things around me."
+];
+function showBISBAS() {
+  document.getElementById('likedShapesForm').classList.add('hidden');
+  document.getElementById('bisbasForm').classList.remove('hidden');
+  const bisbasDiv = document.getElementById('bisbasQuestions');
+  if (bisbasDiv.childElementCount === 0) {
+    bis_bas_questions.forEach((q, i) => {
+      const html = `
+        <div class="question">
+          <label>${i+1}. ${q}
+            <select name="bisbas${i+1}" required>
+              <option value="">Select...</option>
+              <option value="1">1 (Not true)</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4 (Very true)</option>
+            </select>
+          </label>
+        </div>
+      `;
+      bisbasDiv.insertAdjacentHTML('beforeend', html);
+    });
+  }
+}
+function showInstructions() {
+  for (let i = 1; i <= 24; i++) {
+    participant.bisbas[`bisbas${i}`] = document.querySelector(`[name="bisbas${i}"]`).value;
+  }
+  participant.bisbasScores = scoreBISBAS(participant.bisbas);
+  participant.timestamps.bisbas = Date.now();
+  document.getElementById('bisbasForm').classList.add('hidden');
+  document.getElementById('instructions').classList.remove('hidden');
+}
+function scoreBISBAS(responses) {
+  let scores = {
+    BAS_Drive: [4,13,18,22].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
+    BAS_FunSeeking: [7,12,19,23].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
+    BAS_Reward: [2,9,14,20,24].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
+    BIS: [1,3,5,6,8,10,11,15,16,17,21].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0)
+  };
+  scores.interpretation = "Higher scores indicate greater trait levels for each subscale.";
+  return scores;
+}
+
+// Trial Order
+function generateTrialOrder() {
+  const TOTAL_TRIALS = 5, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
+  let order = Array(TOTAL_TRIALS).fill('win');
+  for (let i = 0; i < 4; i++) order[i] = 'win';
+  for (let i = TOTAL_TRIALS - 4; i < TOTAL_TRIALS; i++) order[i] = 'win';
+  let nogainIndices = [];
+  while (nogainIndices.length < NOGAIN_TRIALS) {
+    let idx = Math.floor(Math.random() * (TOTAL_TRIALS - 8)) + 4;
+    if (!nogainIndices.includes(idx)) nogainIndices.push(idx);
+  }
+  nogainIndices.forEach(idx => order[idx] = 'nogain');
+  return order;
+}
+
+// Game UI
+function startGame() {
+  participant.timestamps.gameStart = Date.now();
+  trialOrder = generateTrialOrder();
+  trialNum = 0;
+  totalWinnings = 0;
+  participant.trials = [];
+  participant.totalWinnings = 0;
+  wallet = 2000;
+  winCount = 0;
+  leaderboard = Array.from({length: 15}, (_,i) => ({
+    name: "Player " + (i+1), score: Math.floor(Math.random()*200+50)
+  }));
+  leaderboard.push({name: participant.name || "You", score: 0});
+  document.getElementById('instructions').classList.add('hidden');
+  document.getElementById('gameLayout').classList.remove('hidden');
+  updateGameUI();
+  renderLeaderboard();
+  // Money chip selection
+  document.querySelectorAll('.chip').forEach(chip => {
+    if (!chip.classList.contains('shape-chip')) {
+      chip.onclick = function() {
+        document.querySelectorAll('.chip').forEach(c => { if (!c.classList.contains('shape-chip')) c.classList.remove('selected'); });
+        chip.classList.add('selected');
+        betAmount = parseInt(chip.dataset.value);
+        if (wallet < betAmount) {
+          document.getElementById('spinBtn').disabled = true;
+          document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
+        } else {
+          document.getElementById('spinBtn').disabled = false;
+          document.getElementById('gameMessage').innerHTML = '';
+        }
+      }
+    }
+  });
+  // Shape chip selection
+  renderShapeChips();
+}
+function renderShapeChips() {
+  const chips = document.querySelectorAll('.shape-chip');
+  chips.forEach(chip => {
+    const shape = chip.dataset.shape;
+    chip.innerHTML = shapeSVGs[shape];
+    chip.onclick = function() {
+      chips.forEach(c => c.classList.remove('selected'));
+      chip.classList.add('selected');
+      betShape = shape;
+    }
+  });
+  chips[0].classList.add('selected');
+  betShape = chips[0].dataset.shape;
+}
+function updateGameUI() {
+  document.getElementById('trialInfo').innerHTML = `<b>Trial ${trialNum+1} of 5</b>`;
+  renderReels(['sphere','cube','pyramid']); // Default symbols for display
+  document.getElementById('gameMessage').innerHTML = '';
+  document.getElementById('spinBtn').disabled = false;
+  document.getElementById('totalWinnings').innerText = `Total Winnings: $${totalWinnings}`;
+  document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
+  document.querySelectorAll('.chip').forEach(chip => { if (!chip.classList.contains('shape-chip')) chip.classList.remove('selected'); });
+  betAmount = 1;
+  document.querySelector('.chip[data-value="1"]').classList.add('selected');
+  document.getElementById('reels').classList.remove('sparkle');
+  if (wallet < betAmount) {
+    document.getElementById('spinBtn').disabled = true;
+    document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
+  }
+}
+function renderReels(symbols) {
+  const reelsDiv = document.getElementById('reels');
+  reelsDiv.innerHTML = '';
+  symbols.forEach(sym => {
+    const div = document.createElement('div');
+    div.className = 'reel';
+    div.innerHTML = shapeSVGs[sym] || '';
+    reelsDiv.appendChild(div);
+  });
+}
+function renderLeaderboard() {
+  let player = leaderboard[leaderboard.length-1];
+  let others = leaderboard.slice(0, leaderboard.length-1);
+  others.sort((a,b) => b.score - a.score);
+  let idx = others.findIndex(l => l.score <= player.score);
+  if (idx === -1) idx = others.length;
+  let displayList = others.slice(0, idx).concat([player], others.slice(idx));
+  for (let i=0; i<displayList.length; ++i) {
+    if (displayList[i] === player) continue;
+    if (i < displayList.indexOf(player)) {
+      displayList[i].score = Math.max(displayList[i].score, player.score+1);
+    } else {
+      displayList[i].score = Math.min(displayList[i].score, player.score-1);
+    }
+  }
+  const list = document.getElementById('leaderboardList');
+  list.innerHTML = '';
+  displayList.forEach((l,i) => {
+    const li = document.createElement('li');
+    li.innerText = l.name + " - $" + l.score;
+    if (l.name === player.name) li.className = 'player';
+    list.appendChild(li);
+  });
+}
+function coinShower() {
+  const shower = document.getElementById('coinShower');
+  shower.innerHTML = '';
+  for (let i=0;i<16;i++) {
+    const coin = document.createElement('div');
+    coin.className = 'coin';
+    coin.style.left = (10 + Math.random()*80) + '%';
+    coin.style.top = (-10 + Math.random()*20) + 'px';
+    coin.style.animationDelay = (Math.random()*0.5) + 's';
+    shower.appendChild(coin);
+  }
+  setTimeout(()=>{shower.innerHTML='';}, 1200);
+  playAudioFor2Seconds(document.getElementById('winSound'));
+}
+function thumbsDown() {
+  const td = document.getElementById('thumbsDown');
+  td.classList.remove('hidden');
+  setTimeout(()=>{ td.classList.add('hidden'); }, 1000);
+}
+function spin() {
+  participant.timestamps.trials = participant.timestamps.trials || [];
+  participant.timestamps.trials[trialNum] = { trialStart: Date.now() };
+  if (wallet < betAmount) {
+    document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
+    document.getElementById('spinBtn').disabled = true;
+    return;
+  }
+  document.getElementById('spinBtn').disabled = true;
+  let spinStart = Date.now();
+  wallet -= betAmount;
+  document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
+
+  let anim = setInterval(() => {
+    renderReels([
+      allSymbols[Math.floor(Math.random()*allSymbols.length)],
+      allSymbols[Math.floor(Math.random()*allSymbols.length)],
+      allSymbols[Math.floor(Math.random()*allSymbols.length)]
+    ]);
+  }, 70);
+
+  setTimeout(() => {
+    participant.timestamps.trials[trialNum].feedback = Date.now();
+    clearInterval(anim);
+    let outcome = trialOrder[trialNum];
+    let combo, winAmount = 0, message = '', isReward = 0;
+    if (outcome === 'win') {
+      combo = winningCombos[Math.floor(Math.random()*winningCombos.length)];
+      winAmount = betAmount * 2;
+      totalWinnings += winAmount;
+      participant.totalWinnings = totalWinnings;
+      wallet += winAmount;
+      message = `<span class="sparkle-text">🎉 You win <span class="win-amount">$${winAmount}</span>!</span>`;
+      isReward = 1;
+      coinShower();
+      winCount++;
+      leaderboard[leaderboard.length-1].score += winAmount;
+    } else {
+      combo = nogainCombos[Math.floor(Math.random()*nogainCombos.length)];
+      message = `<span class="nogain">No gain, no loss. Try again.</span>`;
+      isReward = 0;
+      thumbsDown();
+    }
+    renderReels(combo);
+    document.getElementById('gameMessage').innerHTML = message;
+    document.getElementById('totalWinnings').innerText = `Total Winnings: $${totalWinnings}`;
+    document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
+    let shapeWin = betShape && combo.includes(betShape);
+    message += `<br><span class="nogain">Shape Bet (${betShape.charAt(0).toUpperCase() + betShape.slice(1)}): <b>${shapeWin ? "Win" : "Lose"}</b></span>`;
+    document.getElementById('gameMessage').innerHTML = message;
+
+    participant.trials.push({
+      trial: trialNum+1,
+      bet: betAmount,
+      betShape: betShape,
+      shapeWin: shapeWin,
+      combo: combo.join(''),
+      outcome: outcome,
+      win: winAmount,
+      totalWinnings: totalWinnings,
+      wallet: wallet,
+      response: combo[0],
+      isReward: isReward,
+      reactionTime: Date.now() - spinStart,
+      latency: Date.now() - spinStart
+    });
+    renderLeaderboard();
+    trialNum++;
+    if (trialNum < 5 && wallet > 0) {
+      setTimeout(() => {
+        document.getElementById('reels').classList.remove('sparkle');
+        updateGameUI();
+        renderLeaderboard();
+      }, 1600);
+    } else {
+      setTimeout(() => {
+        document.getElementById('gameLayout').classList.add('hidden');
+        showAffectiveForm();
+      }, 1600);
+    }
+  }, 1500);
+}
+
+// Affective Valence/Arousal
+function showAffectiveForm() {
+  document.getElementById('affectiveForm').classList.remove('hidden');
+  participant.affective = {};
+  participant.affective.start = Date.now();
+  participant.timestamps.affectiveStart = Date.now();
+}
+function handleAffectiveForm(event) {
+  event.preventDefault();
+  participant.affective.valence = Number(document.getElementById('valenceSlider').value);
+  participant.affective.arousal = Number(document.getElementById('arousalSlider').value);
+  participant.affective.end = Date.now();
+  participant.affective.reactionTime = participant.affective.end - participant.affective.start;
+  participant.timestamps.affectiveEnd = Date.now();
+  document.getElementById('affectiveForm').classList.add('hidden');
+  showMemoryTasks();
+}
+
+// Memory & Contingency
+function showMemoryTasks() {
+  document.getElementById('memoryForm').classList.remove('hidden');
+  renderMemorySymbols();
+  renderContingencySymbols();
+  participant.memory = {responses: [], scores: [], start: Date.now()};
+  participant.contingency = {responses: [], scores: [], start: Date.now()};
+  participant.timestamps.memoryStart = Date.now();
+}
+function handleMemoryForm(event) {
+  event.preventDefault();
+  const memDivs = document.getElementById('memorySymbolsList').querySelectorAll('.symbol-opt.selected');
+  const memResponses = Array.from(memDivs).map(div => [...allSymbols, ...distractorSymbols][Array.from(div.parentNode.children).indexOf(div)]);
+  participant.memory.responses = memResponses;
+  participant.memory.scores = memResponses.map(sym => allSymbols.includes(sym) ? 1 : 0);
+  participant.memory.end = Date.now();
+  participant.memory.reactionTime = participant.memory.end - participant.memory.start;
+
+  const contDivs = document.getElementById('contingencySymbolsList').querySelectorAll('.symbol-opt.selected');
+  const contResponses = Array.from(contDivs).map(div => [...allSymbols, ...distractorSymbols][Array.from(div.parentNode.children).indexOf(div)]);
+  participant.contingency.responses = contResponses;
+  participant.contingency.scores = contResponses.map(sym => rewardSymbols.includes(sym) ? 1 : 0);
+  participant.contingency.end = Date.now();
+  participant.contingency.reactionTime = participant.contingency.end - participant.contingency.start;
+
+  document.getElementById('memoryForm').classList.add('hidden');
+  showProbeTask();
+}
+function renderMemorySymbols() {
+  const list = document.getElementById('memorySymbolsList');
+  list.innerHTML = '';
+  [...allSymbols, ...distractorSymbols].forEach(sym => {
+    const div = document.createElement('div');
+    div.className = 'symbol-opt';
+    div.innerHTML = shapeSVGs[sym] || '';
+    div.onclick = function() {
+      div.classList.toggle('selected');
+    };
+    list.appendChild(div);
+  });
+}
+function renderContingencySymbols() {
+  const list = document.getElementById('contingencySymbolsList');
+  list.innerHTML = '';
+  [...allSymbols, ...distractorSymbols].forEach(sym => {
+    const div = document.createElement('div');
+    div.className = 'symbol-opt';
+    div.innerHTML = shapeSVGs[sym] || '';
+    div.onclick = function() {
+      div.classList.toggle('selected');
+    };
+    list.appendChild(div);
+  });
+}
+
+// Probe Task
+function showProbeTask() {
+  document.getElementById('probeTask').classList.remove('hidden');
+  participant.timestamps.probeStart = Date.now();
+  const pairs = [];
+  winningCombos.forEach(win => {
+    nogainCombos.forEach(nogain => {
+      pairs.push([win[0], nogain[0]]);
+    });
+  });
+  let probeIndex = 0;
+  participant.probe = [];
+  const probeDiv = document.getElementById('probePairs');
+  function renderProbe() {
+    probeDiv.innerHTML = '';
+    if (probeIndex >= pairs.length) {
+      document.getElementById('finishBtn').disabled = false;
+      return;
+    }
+    let [a, b] = pairs[probeIndex];
+    if (Math.random() > 0.5) [a, b] = [b, a];
+    const question = document.createElement('div');
+    question.style.fontWeight = 'bold';
+    question.style.marginBottom = '12px';
+    question.innerText = "Which is more pleasant out of these two?";
+    probeDiv.appendChild(question);
+
+    const pairDiv = document.createElement('div');
+    pairDiv.className = 'probe-pair';
+    const btnA = document.createElement('button');
+    btnA.className = 'probe-btn';
+    btnA.innerHTML = shapeSVGs[a];
+    const btnB = document.createElement('button');
+    btnB.className = 'probe-btn';
+    btnB.innerHTML = shapeSVGs[b];
+    let probeStart = Date.now();
+    btnA.onclick = (e) => { e.preventDefault(); recordProbe(a,b,a,probeStart); };
+    btnB.onclick = (e) => { e.preventDefault(); recordProbe(a,b,b,probeStart); };
+    pairDiv.appendChild(btnA);
+    pairDiv.appendChild(btnB);
+    probeDiv.appendChild(pairDiv);
+  }
+  function recordProbe(a,b,choice, probeStart) {
+    let isReward = rewardSymbols.includes(choice) ? 1 : 0;
+    participant.probe.push({
+      pair: [a,b],
+      choice: choice,
+      isReward: isReward,
+      reactionTime: Date.now() - probeStart
+    });
+    probeIndex++;
+    renderProbe();
+  }
+  renderProbe();
+}
+
+// Finish Experiment
+function finishExperiment() {
+  participant.timestamps.experimentEnd = Date.now();
+  document.getElementById('probeTask').classList.add('hidden');
+  document.getElementById('thankYou').classList.remove('hidden');
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(participant));
+  const dlAnchor = document.createElement('a');
+  dlAnchor.setAttribute("href", dataStr);
+  dlAnchor.setAttribute("download", "slot_machine_data.json");
+  document.body.appendChild(dlAnchor);
+  dlAnchor.click();
+  dlAnchor.remove();
+  console.log('Participant Data:', participant);
+}
+
+// DOMContentLoaded: Attach Handlers and Set Initial State
+document.addEventListener('DOMContentLoaded', function() {
+  // Show only consent at load
+  document.getElementById('consentForm').classList.remove('hidden');
+  document.getElementById('participantForm').classList.add('hidden');
+  document.getElementById('likedShapesForm').classList.add('hidden');
+  document.getElementById('bisbasForm').classList.add('hidden');
+  document.getElementById('instructions').classList.add('hidden');
+  document.getElementById('gameLayout').classList.add('hidden');
+  document.getElementById('affectiveForm').classList.add('hidden');
+  document.getElementById('memoryForm').classList.add('hidden');
+  document.getElementById('probeTask').classList.add('hidden');
+  document.getElementById('thankYou').classList.add('hidden');
+
+  // Attach form handlers
+  document.getElementById('consentForm').onsubmit = function(event) {
+    event.preventDefault();
+    showParticipantForm();
+  };
+  document.getElementById('participantForm').onsubmit = function(event) {
+    event.preventDefault();
+    showLikedShapes();
+  };
+  document.getElementById('likedShapesForm').onsubmit = function(event) {
+    event.preventDefault();
+    validateLikedShapes();
+  };
+  document.getElementById('bisbasForm').onsubmit = function(event) {
+    event.preventDefault();
+    showInstructions();
+  };
+  document.getElementById('affectiveForm').onsubmit = handleAffectiveForm;
+  document.getElementById('memoryForm').onsubmit = handleMemoryForm;
+  document.getElementById('finishBtn').onclick = function(event) {
+    event.preventDefault();
+    finishExperiment();
+  };
+  // Start game button
+  document.querySelector('.instructions .submit-btn').onclick = function(event) {
+    event.preventDefault();
+    startGame();
+  };
+});
+</script>
+</body>
+</html>
