@@ -556,7 +556,7 @@ function scoreBISBAS(responses) {
 
 // Trial Order
 function generateTrialOrder() {
-  const TOTAL_TRIALS = 5, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
+  const TOTAL_TRIALS = 110, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
   let order = Array(TOTAL_TRIALS).fill('win');
   for (let i = 0; i < 4; i++) order[i] = 'win';
   for (let i = TOTAL_TRIALS - 4; i < TOTAL_TRIALS; i++) order[i] = 'win';
@@ -622,7 +622,7 @@ function renderShapeChips() {
   betShape = chips[0].dataset.shape;
 }
 function updateGameUI() {
-  document.getElementById('trialInfo').innerHTML = `<b>Trial ${trialNum+1} of 5</b>`;
+  document.getElementById('trialInfo').innerHTML = `<b>Trial ${trialNum+1} of 110</b>`;
   renderReels(['sphere','cube','pyramid']); // Default symbols for display
   document.getElementById('gameMessage').innerHTML = '';
   document.getElementById('spinBtn').disabled = false;
@@ -758,7 +758,7 @@ function spin() {
     });
     renderLeaderboard();
     trialNum++;
-    if (trialNum < 5 && wallet > 0) {
+    if (trialNum < 110 && wallet > 0) {
       setTimeout(() => {
         document.getElementById('reels').classList.remove('sparkle');
         updateGameUI();
