@@ -265,7 +265,7 @@
   <div class="instructions hidden" id="instructions">
     <h2>Welcome to the Casino Slot Machine Game!</h2>
     <ul>
-      <li>You will play <b>110 rounds</b>. In each round, place your bet using casino chips, and choose a shape to bet on.</li>
+      <li>You will play <b>50 rounds</b>. In each round, place your bet using casino chips, and choose a shape to bet on.</li>
       <li><b>Higher the bet, higher the risk and potential reward.</b></li>
       <li>Try to climb the leaderboard by winning more!</li>
       <li>Press the <b>SPIN</b> button to play each round.</li>
@@ -556,7 +556,7 @@ function scoreBISBAS(responses) {
 
 // Trial Order
 function generateTrialOrder() {
-  const TOTAL_TRIALS = 110, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
+  const TOTAL_TRIALS = 50, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
   let order = Array(TOTAL_TRIALS).fill('win');
   for (let i = 0; i < 4; i++) order[i] = 'win';
   for (let i = TOTAL_TRIALS - 4; i < TOTAL_TRIALS; i++) order[i] = 'win';
@@ -622,7 +622,7 @@ function renderShapeChips() {
   betShape = chips[0].dataset.shape;
 }
 function updateGameUI() {
-  document.getElementById('trialInfo').innerHTML = `<b>Trial ${trialNum+1} of 110</b>`;
+  document.getElementById('trialInfo').innerHTML = `<b>Trial ${trialNum+1} of 50</b>`;
   renderReels(['sphere','cube','pyramid']); // Default symbols for display
   document.getElementById('gameMessage').innerHTML = '';
   document.getElementById('spinBtn').disabled = false;
@@ -738,7 +738,6 @@ function spin() {
     document.getElementById('totalWinnings').innerText = `Total Winnings: $${totalWinnings}`;
     document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
     let shapeWin = betShape && combo.includes(betShape);
-    message += `<br><span class="nogain">Shape Bet (${betShape.charAt(0).toUpperCase() + betShape.slice(1)}): <b>${shapeWin ? "Win" : "Lose"}</b></span>`;
     document.getElementById('gameMessage').innerHTML = message;
 
     participant.trials.push({
@@ -758,7 +757,7 @@ function spin() {
     });
     renderLeaderboard();
     trialNum++;
-    if (trialNum < 110 && wallet > 0) {
+    if (trialNum < 50 && wallet > 0) {
       setTimeout(() => {
         document.getElementById('reels').classList.remove('sparkle');
         updateGameUI();
@@ -963,3 +962,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
