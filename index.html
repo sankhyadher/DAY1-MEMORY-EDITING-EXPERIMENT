@@ -731,85 +731,96 @@ function thumbsDown() {
   td.classList.remove('hidden');
   setTimeout(()=>{ td.classList.add('hidden'); }, 1000);
 }
+
+// EDITED FUNCTION
 function spin() {
-  if (wallet < betAmount) {
-    document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
+    if (wallet < betAmount) {
+        document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
+        document.getElementById('spinBtn').disabled = true;
+        return;
+    }
     document.getElementById('spinBtn').disabled = true;
-    return;
-  }
-  document.getElementById('spinBtn').disabled = true;
-  let spinStart = Date.now();
-  wallet -= betAmount;
-  document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
-
-  let anim = setInterval(() => {
-    renderReels([
-      allSymbols[Math.floor(Math.random()*allSymbols.length)],
-      allSymbols[Math.floor(Math.random()*allSymbols.length)],
-      allSymbols[Math.floor(Math.random()*allSymbols.length)]
-    ]);
-  }, 70);
-
-  setTimeout(() => {
-    clearInterval(anim);
-    let outcome = trialOrder[trialNum];
-    let combo, winAmount = 0, message = '', isReward = 0;
-    if (outcome === 'win') {
-      combo = winningCombos[Math.floor(Math.random()*winningCombos.length)];
-      winAmount = betAmount * 2;
-      totalWinnings += winAmount;
-      participant.totalWinnings = totalWinnings;
-      wallet += winAmount;
-      message = `<span class="sparkle-text">🎉 You win <span class="win-amount">$${winAmount}</span>!</span>`;
-      isReward = 1;
-      coinShower();
-      winCount++;
-      leaderboard[leaderboard.length-1].score += winAmount;
-    } else {
-      combo = nogainCombos[Math.floor(Math.random()*nogainCombos.length)];
-      message = `<span class="nogain">No gain, no loss. Try again.</span>`;
-      isReward = 0;
-      thumbsDown();
-    }
-    renderReels(combo);
-    document.getElementById('gameMessage').innerHTML = message;
-    document.getElementById('totalWinnings').innerText = `Total Winnings: $${totalWinnings}`;
+    let spinStart = Date.now();
+    wallet -= betAmount;
     document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
-    let shapeWin = betShape && combo.includes(betShape);
-    document.getElementById('gameMessage').innerHTML = message;
 
-    participant.trials.push({
-      trial: trialNum+1,
-      bet: betAmount,
-      betShape: betShape,
-      shapeWin: shapeWin,
-      combo: combo.join(''),
-      outcome: outcome,
-      win: winAmount,
-      totalWinnings: totalWinnings,
-      wallet: wallet,
-      response: combo[0],
-      isReward: isReward,
-      reactionTime: Date.now() - spinStart,
-      latency: Date.now() - spinStart
-    });
-    renderLeaderboard();
-    trialNum++;
-    if (trialNum < 50 && wallet > 0) {
-      setTimeout(() => {
-        document.getElementById('reels').classList.remove('sparkle');
-        updateGameUI();
+    let anim = setInterval(() => {
+        renderReels([
+            allSymbols[Math.floor(Math.random() * allSymbols.length)],
+            allSymbols[Math.floor(Math.random() * allSymbols.length)],
+            allSymbols[Math.floor(Math.random() * allSymbols.length)]
+        ]);
+    }, 70);
+
+    setTimeout(() => {
+        clearInterval(anim);
+
+        let outcome;
+        let combo, winAmount = 0, message = '', isReward = 0;
+        const winningShapes = ['sphere', 'pyramid'];
+
+        if (winningShapes.includes(betShape)) {
+            // WIN condition: User bet on a winning shape
+            outcome = 'win';
+            combo = [betShape, betShape, betShape];
+            winAmount = betAmount * 2;
+            totalWinnings += winAmount;
+            participant.totalWinnings = totalWinnings;
+            wallet += winAmount;
+            message = `<span class="sparkle-text">🎉 You win <span class="win-amount">$${winAmount}</span>!</span>`;
+            isReward = 1;
+            coinShower();
+            winCount++;
+            leaderboard[leaderboard.length - 1].score += winAmount;
+        } else {
+            // NO GAIN condition: User bet on a non-winning shape
+            outcome = 'nogain';
+            combo = [betShape, betShape, betShape];
+            message = `<span class="nogain">No gain, no loss. Try again.</span>`;
+            isReward = 0;
+            thumbsDown();
+        }
+
+        renderReels(combo);
+        document.getElementById('gameMessage').innerHTML = message;
+        document.getElementById('totalWinnings').innerText = `Total Winnings: $${totalWinnings}`;
+        document.getElementById('walletDisplay').innerText = `Wallet: $${wallet}`;
+        let shapeWin = winningShapes.includes(betShape);
+        document.getElementById('gameMessage').innerHTML = message;
+
+        participant.trials.push({
+            trial: trialNum + 1,
+            bet: betAmount,
+            betShape: betShape,
+            shapeWin: shapeWin,
+            combo: combo.join(''),
+            outcome: outcome,
+            win: winAmount,
+            totalWinnings: totalWinnings,
+            wallet: wallet,
+            response: combo[0],
+            isReward: isReward,
+            reactionTime: Date.now() - spinStart,
+            latency: Date.now() - spinStart
+        });
         renderLeaderboard();
-      }, 1600);
-    } else {
-      setTimeout(() => {
-        participant.timestamps.slotMachineEnd = new Date().toISOString();
-        document.getElementById('gameLayout').classList.add('hidden');
-        showAffectiveForm();
-      }, 1600);
-    }
-  }, 1500);
+        trialNum++;
+        if (trialNum < 50 && wallet > 0) {
+            setTimeout(() => {
+                document.getElementById('reels').classList.remove('sparkle');
+                updateGameUI();
+                renderLeaderboard();
+            }, 1600);
+        } else {
+            setTimeout(() => {
+                participant.timestamps.slotMachineEnd = new Date().toISOString();
+                document.getElementById('gameLayout').classList.add('hidden');
+                showAffectiveForm();
+            }, 1600);
+        }
+    }, 1500);
 }
+
 
 // 6. Emotional Valence/Arousal Task
 function showAffectiveForm() {
@@ -996,4 +1007,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
