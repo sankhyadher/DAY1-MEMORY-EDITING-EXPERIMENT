@@ -60,7 +60,7 @@
     .social { color: #0f0; font-weight: bold; }
     .nogain { color: #aaa; }
     .win-amount { color: #ffd700; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 8px #fff700; }
-    .instructions, .bisbas, .memoryForm, .probe { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
+    .instructions, .bisbas, .memoryForm, .probe, .consent, .affectiveForm { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
     .question { margin-bottom: 18px; }
     .leaderboard { background: #1a1203; border-radius: 16px; padding: 18px 16px; max-width: 260px; margin: 0; box-shadow: 0 2px 12px #000a; flex: 1;}
     .leaderboard h3 { margin: 0 0 10px 0; color: #ffd700; text-align: center; letter-spacing: 1px; }
@@ -132,15 +132,13 @@
     .probe-pair { display: flex; gap: 32px; justify-content: center; margin: 18px 0; }
     .probe-btn { border: 2px solid #888; background: #222; border-radius: 8px; padding: 8px; cursor: pointer; width: 80px; height: 80px; }
     .probe-btn.selected { border: 2px solid #0f0; }
-    button { padding: 8px 18px; border-radius: 6px; border: none; background: #0a8; color: #fff; font-weight: bold; cursor: pointer; }
-}
+    button, .submit-btn { padding: 8px 18px; border-radius: 6px; border: none; background: #0a8; color: #fff; font-weight: bold; cursor: pointer; }
   </style>
 </head>
 <body>
 <div class="container">
 
-  <!-- Consent Form -->
-<form class="consent" id="consentForm" onsubmit="event.preventDefault(); showParticipantForm();">
+  <form class="consent" id="consentForm">
   <h2>INFORMED CONSENT FORM</h2>
   <div style="margin-bottom:10px;">
     <b>Title of Study:</b><br>
@@ -224,8 +222,7 @@
 </form>
 
 
-  <!-- Participant Info Form -->
-  <form class="bisbas hidden" id="participantForm" onsubmit="event.preventDefault(); showLikedShapes();">
+  <form class="bisbas hidden" id="participantForm">
     <h2>Participant Information</h2>
     <div class="question"><label>Participant ID: <input type="text" id="participantId" required></label></div>
     <div class="question"><label>Session ID: <input type="text" id="sessionId" required></label></div>
@@ -242,9 +239,15 @@
     </label></div>
     <button class="submit-btn" type="submit">Continue</button>
   </form>
+  
+  <div class="instructions hidden" id="baselineScreen">
+        <h2>Baseline Recording</h2>
+        <p>Please sit still and relax for the next 2 minutes. Focus on the crosshair on the screen.</p>
+        <div class="center" style="font-size: 5rem; margin: 20px 0;">+</div>
+        <p>Time remaining: <span id="baselineTimer">120</span> seconds</p>
+    </div>
 
-  <!-- Liked Shapes (no distractors) -->
-  <form class="bisbas hidden" id="likedShapesForm" onsubmit="event.preventDefault(); validateLikedShapes();">
+  <form class="bisbas hidden" id="likedShapesForm">
     <h2>Shape Preferences</h2>
     <div class="question">
       <label>Please mark all the shapes that you like:</label>
@@ -254,14 +257,12 @@
     <button class="submit-btn" type="submit">Continue</button>
   </form>
 
-  <!-- BIS-BAS Scale -->
-  <form class="bisbas hidden" id="bisbasForm" onsubmit="event.preventDefault(); showInstructions();">
+  <form class="bisbas hidden" id="bisbasForm">
     <h2>BIS-BAS Scale</h2>
     <div id="bisbasQuestions"></div>
     <button class="submit-btn" type="submit">Continue</button>
   </form>
 
-  <!-- Game Instructions -->
   <div class="instructions hidden" id="instructions">
     <h2>Welcome to the Casino Slot Machine Game!</h2>
     <ul>
@@ -272,10 +273,9 @@
       <li>You start with <b>$2000</b> in your wallet. If you run out, you can't play further.</li>
       <li>Good luck!</li>
     </ul>
-    <button class="submit-btn" onclick="startGame()">Start Game</button>
+    <button class="submit-btn">Start Game</button>
   </div>
 
-  <!-- Slot Machine Game -->
   <div class="slot-machine-layout hidden" id="gameLayout">
     <div id="game" class="slot-machine">
       <div class="center">
@@ -314,8 +314,7 @@
     </div>
   </div>
 
- <!-- Affective Valence/Arousal Scale -->
-  <form class="affectiveForm hidden" id="affectiveForm">
+ <form class="affectiveForm hidden" id="affectiveForm">
     <h2>Affective Ratings</h2>
     <div class="affective-layout">
       <div class="affective-left">
@@ -346,7 +345,6 @@
   </form>
 
 
-  <!-- Memory & Contingency Awareness Tasks -->
   <form class="memoryForm hidden" id="memoryForm">
     <h2>Memory and Awareness</h2>
     <div class="question">
@@ -360,14 +358,12 @@
     <button class="submit-btn" type="submit">Continue</button>
   </form>
 
-  <!-- Binary Probe Task -->
   <div class="probe hidden" id="probeTask">
     <h2>Binary Probe Task</h2>
     <div id="probePairs"></div>
-    <button class="submit-btn" id="finishBtn" onclick="finishExperiment()" disabled>Finish</button>
+    <button class="submit-btn" id="finishBtn" disabled>Finish</button>
   </div>
 
-  <!-- End -->
   <div class="center hidden" id="thankYou">
     <h2>Thank you for participating!</h2>
     <p>Your responses have been recorded.</p>
@@ -375,17 +371,12 @@
   </div>
 </div>
 
-  <!-- Sound for win -->
   <audio id="winSound" src="https://orangefreesounds.com/wp-content/uploads/2022/06/Casino-winner-sound-effect.mp3"></audio>
 
 </div>
 <script>
 /* --- Sound Helper --- */
 const winSound = document.getElementById('winSound');
-const clapSound = document.getElementById('clapSound');
-// Add this function:
-
-// --- Sound Helper ---
 function playAudioFor2Seconds(audioElement) {
   if (!audioElement) return;
   audioElement.currentTime = 0;
@@ -420,7 +411,28 @@ let participant = {
   bisbasScores: {},
   trials: [],
   totalWinnings: 0,
-  timestamps: {}
+  timestamps: {
+      experimentStart: new Date().toISOString(),
+      consentStart: new Date().toISOString(),
+      consentEnd: null,
+      participantInfoStart: null,
+      participantInfoEnd: null,
+      baselineStart: null,
+      baselineEnd: null,
+      preferenceTaskStart: null,
+      preferenceTaskEnd: null,
+      bisbasStart: null,
+      bisbasEnd: null,
+      slotMachineStart: null,
+      slotMachineEnd: null,
+      affectiveTaskStart: null,
+      affectiveTaskEnd: null,
+      memoryContingencyStart: null,
+      memoryContingencyEnd: null,
+      probeTaskStart: null,
+      probeTaskEnd: null,
+      experimentEnd: null
+  }
 };
 
 let trialOrder = [];
@@ -432,23 +444,53 @@ let totalWinnings = 0;
 let wallet = 2000;
 let winCount = 0;
 
-// Consent
+// --- Task Flow Functions ---
+
+// 1. Consent Form
 function showParticipantForm() {
-  participant.timestamps.consent = Date.now();
+  participant.timestamps.consentEnd = new Date().toISOString();
+  participant.timestamps.participantInfoStart = new Date().toISOString();
   document.getElementById('consentForm').classList.add('hidden');
   document.getElementById('participantForm').classList.remove('hidden');
 }
 
-// Liked Shapes
+// 2. Participant Info & Baseline
+function startBaseline() {
+    // Gather participant data
+    participant.participantId = document.getElementById('participantId').value.trim();
+    participant.sessionId = document.getElementById('sessionId').value.trim();
+    participant.groupNumber = document.getElementById('groupNumber').value;
+    participant.name = document.getElementById('name').value.trim();
+    participant.age = document.getElementById('age').value;
+    participant.gender = document.getElementById('gender').value;
+
+    // Record timestamps
+    participant.timestamps.participantInfoEnd = new Date().toISOString();
+    participant.timestamps.baselineStart = new Date().toISOString();
+
+    // Show baseline screen and start timer
+    document.getElementById('participantForm').classList.add('hidden');
+    document.getElementById('baselineScreen').classList.remove('hidden');
+
+    let timeLeft = 120;
+    const timerEl = document.getElementById('baselineTimer');
+    timerEl.textContent = timeLeft;
+
+    const countdown = setInterval(() => {
+        timeLeft--;
+        timerEl.textContent = timeLeft;
+        if (timeLeft <= 0) {
+            clearInterval(countdown);
+            participant.timestamps.baselineEnd = new Date().toISOString();
+            document.getElementById('baselineScreen').classList.add('hidden');
+            showLikedShapes(); // Proceed to the next task
+        }
+    }, 1000);
+}
+
+// 3. Preference Task (Liked Shapes)
 function showLikedShapes() {
-  participant.timestamps.participantInfo = Date.now();
-  participant.participantId = document.getElementById('participantId').value.trim();
-  participant.sessionId = document.getElementById('sessionId').value.trim();
-  participant.groupNumber = document.getElementById('groupNumber').value;
-  participant.name = document.getElementById('name').value.trim();
-  participant.age = document.getElementById('age').value;
-  participant.gender = document.getElementById('gender').value;
-  document.getElementById('participantForm').classList.add('hidden');
+  participant.timestamps.preferenceTaskStart = new Date().toISOString();
   document.getElementById('likedShapesForm').classList.remove('hidden');
   renderLikedShapes();
 }
@@ -477,14 +519,14 @@ function validateLikedShapes() {
     document.getElementById('likedShapesError').style.display = "block";
     return false;
   }
-  participant.timestamps.likedShapes = Date.now();
+  participant.timestamps.preferenceTaskEnd = new Date().toISOString();
   document.getElementById('likedShapesError').style.display = "none";
   document.getElementById('likedShapesForm').classList.add('hidden');
   showBISBAS();
   return true;
 }
 
-// BIS-BAS
+// 4. BIS-BAS Scale
 const bis_bas_questions = [
   "I worry about making mistakes.",
   "When I get something I want, I feel excited and energized.",
@@ -512,7 +554,7 @@ const bis_bas_questions = [
   "I am easily distracted by things around me."
 ];
 function showBISBAS() {
-  document.getElementById('likedShapesForm').classList.add('hidden');
+  participant.timestamps.bisbasStart = new Date().toISOString();
   document.getElementById('bisbasForm').classList.remove('hidden');
   const bisbasDiv = document.getElementById('bisbasQuestions');
   if (bisbasDiv.childElementCount === 0) {
@@ -539,7 +581,7 @@ function showInstructions() {
     participant.bisbas[`bisbas${i}`] = document.querySelector(`[name="bisbas${i}"]`).value;
   }
   participant.bisbasScores = scoreBISBAS(participant.bisbas);
-  participant.timestamps.bisbas = Date.now();
+  participant.timestamps.bisbasEnd = new Date().toISOString();
   document.getElementById('bisbasForm').classList.add('hidden');
   document.getElementById('instructions').classList.remove('hidden');
 }
@@ -554,7 +596,7 @@ function scoreBISBAS(responses) {
   return scores;
 }
 
-// Trial Order
+// 5. Slot Machine Game
 function generateTrialOrder() {
   const TOTAL_TRIALS = 50, NOGAIN_TRIALS = Math.round(TOTAL_TRIALS * 0.3);
   let order = Array(TOTAL_TRIALS).fill('win');
@@ -568,10 +610,8 @@ function generateTrialOrder() {
   nogainIndices.forEach(idx => order[idx] = 'nogain');
   return order;
 }
-
-// Game UI
 function startGame() {
-  participant.timestamps.gameStart = Date.now();
+  participant.timestamps.slotMachineStart = new Date().toISOString();
   trialOrder = generateTrialOrder();
   trialNum = 0;
   totalWinnings = 0;
@@ -691,8 +731,6 @@ function thumbsDown() {
   setTimeout(()=>{ td.classList.add('hidden'); }, 1000);
 }
 function spin() {
-  participant.timestamps.trials = participant.timestamps.trials || [];
-  participant.timestamps.trials[trialNum] = { trialStart: Date.now() };
   if (wallet < betAmount) {
     document.getElementById('gameMessage').innerHTML = `<span class="nogain">Insufficient funds to bet. Game over!</span>`;
     document.getElementById('spinBtn').disabled = true;
@@ -712,7 +750,6 @@ function spin() {
   }, 70);
 
   setTimeout(() => {
-    participant.timestamps.trials[trialNum].feedback = Date.now();
     clearInterval(anim);
     let outcome = trialOrder[trialNum];
     let combo, winAmount = 0, message = '', isReward = 0;
@@ -765,6 +802,7 @@ function spin() {
       }, 1600);
     } else {
       setTimeout(() => {
+        participant.timestamps.slotMachineEnd = new Date().toISOString();
         document.getElementById('gameLayout').classList.add('hidden');
         showAffectiveForm();
       }, 1600);
@@ -772,12 +810,12 @@ function spin() {
   }, 1500);
 }
 
-// Affective Valence/Arousal
+// 6. Emotional Valence/Arousal Task
 function showAffectiveForm() {
+  participant.timestamps.affectiveTaskStart = new Date().toISOString();
   document.getElementById('affectiveForm').classList.remove('hidden');
   participant.affective = {};
   participant.affective.start = Date.now();
-  participant.timestamps.affectiveStart = Date.now();
 }
 function handleAffectiveForm(event) {
   event.preventDefault();
@@ -785,19 +823,19 @@ function handleAffectiveForm(event) {
   participant.affective.arousal = Number(document.getElementById('arousalSlider').value);
   participant.affective.end = Date.now();
   participant.affective.reactionTime = participant.affective.end - participant.affective.start;
-  participant.timestamps.affectiveEnd = Date.now();
+  participant.timestamps.affectiveTaskEnd = new Date().toISOString();
   document.getElementById('affectiveForm').classList.add('hidden');
   showMemoryTasks();
 }
 
-// Memory & Contingency
+// 7. Memory & Contingency Task
 function showMemoryTasks() {
+  participant.timestamps.memoryContingencyStart = new Date().toISOString();
   document.getElementById('memoryForm').classList.remove('hidden');
   renderMemorySymbols();
   renderContingencySymbols();
   participant.memory = {responses: [], scores: [], start: Date.now()};
   participant.contingency = {responses: [], scores: [], start: Date.now()};
-  participant.timestamps.memoryStart = Date.now();
 }
 function handleMemoryForm(event) {
   event.preventDefault();
@@ -815,6 +853,7 @@ function handleMemoryForm(event) {
   participant.contingency.end = Date.now();
   participant.contingency.reactionTime = participant.contingency.end - participant.contingency.start;
 
+  participant.timestamps.memoryContingencyEnd = new Date().toISOString();
   document.getElementById('memoryForm').classList.add('hidden');
   showProbeTask();
 }
@@ -845,10 +884,10 @@ function renderContingencySymbols() {
   });
 }
 
-// Probe Task
+// 8. Binary Probe Task
 function showProbeTask() {
+  participant.timestamps.probeTaskStart = new Date().toISOString();
   document.getElementById('probeTask').classList.remove('hidden');
-  participant.timestamps.probeStart = Date.now();
   const pairs = [];
   winningCombos.forEach(win => {
     nogainCombos.forEach(nogain => {
@@ -901,15 +940,17 @@ function showProbeTask() {
   renderProbe();
 }
 
-// Finish Experiment
+// 9. Finish Experiment
 function finishExperiment() {
-  participant.timestamps.experimentEnd = Date.now();
+  participant.timestamps.probeTaskEnd = new Date().toISOString();
+  participant.timestamps.experimentEnd = new Date().toISOString();
   document.getElementById('probeTask').classList.add('hidden');
   document.getElementById('thankYou').classList.remove('hidden');
-  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(participant));
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(participant, null, 2)); // Prettify JSON
   const dlAnchor = document.createElement('a');
   dlAnchor.setAttribute("href", dataStr);
-  dlAnchor.setAttribute("download", "slot_machine_data.json");
+  const fileName = `participant_${participant.participantId}_session_${participant.sessionId}_data.json`;
+  dlAnchor.setAttribute("download", fileName);
   document.body.appendChild(dlAnchor);
   dlAnchor.click();
   dlAnchor.remove();
@@ -918,17 +959,9 @@ function finishExperiment() {
 
 // DOMContentLoaded: Attach Handlers and Set Initial State
 document.addEventListener('DOMContentLoaded', function() {
-  // Show only consent at load
+  // Show only consent form at the beginning
+  document.querySelectorAll('.container > *').forEach(el => el.classList.add('hidden'));
   document.getElementById('consentForm').classList.remove('hidden');
-  document.getElementById('participantForm').classList.add('hidden');
-  document.getElementById('likedShapesForm').classList.add('hidden');
-  document.getElementById('bisbasForm').classList.add('hidden');
-  document.getElementById('instructions').classList.add('hidden');
-  document.getElementById('gameLayout').classList.add('hidden');
-  document.getElementById('affectiveForm').classList.add('hidden');
-  document.getElementById('memoryForm').classList.add('hidden');
-  document.getElementById('probeTask').classList.add('hidden');
-  document.getElementById('thankYou').classList.add('hidden');
 
   // Attach form handlers
   document.getElementById('consentForm').onsubmit = function(event) {
@@ -937,7 +970,7 @@ document.addEventListener('DOMContentLoaded', function() {
   };
   document.getElementById('participantForm').onsubmit = function(event) {
     event.preventDefault();
-    showLikedShapes();
+    startBaseline();
   };
   document.getElementById('likedShapesForm').onsubmit = function(event) {
     event.preventDefault();
@@ -954,7 +987,7 @@ document.addEventListener('DOMContentLoaded', function() {
     finishExperiment();
   };
   // Start game button
-  document.querySelector('.instructions .submit-btn').onclick = function(event) {
+  document.querySelector('#instructions .submit-btn').onclick = function(event) {
     event.preventDefault();
     startGame();
   };
@@ -962,4 +995,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
-
