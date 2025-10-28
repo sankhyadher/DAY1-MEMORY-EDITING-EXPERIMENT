@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,7 +62,7 @@
     .social { color: #0f0; font-weight: bold; }
     .nogain { color: #aaa; }
     .win-amount { color: #ffd700; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 8px #fff700; }
-    .instructions, .bisbas, .memoryForm, .probe, .consent, .affectiveForm { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
+    .instructions, .memoryForm, .probe, .consent, .affectiveForm { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
     .question { margin-bottom: 18px; }
     .leaderboard { background: #1a1203; border-radius: 16px; padding: 18px 16px; max-width: 260px; margin: 0; box-shadow: 0 2px 12px #000a; flex: 1;}
     .leaderboard h3 { margin: 0 0 10px 0; color: #ffd700; text-align: center; letter-spacing: 1px; }
@@ -223,7 +224,7 @@
 </form>
 
 
-  <form class="bisbas hidden" id="participantForm">
+  <form class="hidden" id="participantForm">
     <h2>Participant Information</h2>
     <div class="question"><label>Participant ID: <input type="text" id="participantId" required></label></div>
     <div class="question"><label>Session ID: <input type="text" id="sessionId" required></label></div>
@@ -239,8 +240,9 @@
       </select>
     </label></div>
     <button class="submit-btn" type="submit">Continue</button>
+    <button class="submit-btn" type="button" id="skipParticipantForm" style="background-color: #555; margin-left: 10px;">Skip</button>
   </form>
-  
+
   <div class="instructions hidden" id="baselineScreen">
         <h2>Baseline Recording</h2>
         <p>Please sit still and relax for the next 2 minutes. Focus on the crosshair on the screen.</p>
@@ -258,11 +260,6 @@
     <button class="submit-btn" type="submit">Continue</button>
   </form>
 
-  <form class="bisbas hidden" id="bisbasForm">
-    <h2>BIS-BAS Scale</h2>
-    <div id="bisbasQuestions"></div>
-    <button class="submit-btn" type="submit">Continue</button>
-  </form>
 
   <div class="instructions hidden" id="instructions">
     <h2>Welcome to the Casino Slot Machine Game!</h2>
@@ -330,7 +327,7 @@
           </div>
           <div class="affective-slider-caption">“Rate the level of pleasantness or unpleasantness while playing the game by using the slider below. The scale ranges from extremely unpleasant (represented by the frowning figure on the far left) to extremely pleasant (represented by the smiling figure on the far right). The middle of the scale represents a neutral feeling.”</b></div>
         </div>
-        
+
         <div class="affective-slider-block">
           <div class="affective-slider-label">
             <img src="https://img.icons8.com/emoji/48/000000/sleeping-face.png" class="affective-slider-face" alt="Low arousal">
@@ -409,8 +406,7 @@ let participant = {
   participantId: '', sessionId: '', groupNumber: '',
   name: '', age: '', gender: '',
   likedShapes: [],
-  bisbas: {},
-  bisbasScores: {},
+
   trials: [],
   totalWinnings: 0,
   timestamps: {
@@ -423,8 +419,7 @@ let participant = {
       baselineEnd: null,
       preferenceTaskStart: null,
       preferenceTaskEnd: null,
-      bisbasStart: null,
-      bisbasEnd: null,
+
       slotMachineStart: null,
       slotMachineEnd: null,
       affectiveTaskStart: null,
@@ -524,79 +519,16 @@ function validateLikedShapes() {
   participant.timestamps.preferenceTaskEnd = new Date().toISOString();
   document.getElementById('likedShapesError').style.display = "none";
   document.getElementById('likedShapesForm').classList.add('hidden');
-  showBISBAS();
+  showInstructions(); // Proceed directly to instructions after liked shapes
   return true;
 }
 
-// 4. BIS-BAS Scale
-const bis_bas_questions = [
-  "I worry about making mistakes.",
-  "When I get something I want, I feel excited and energized.",
-  "I feel worried when I think I have done poorly at something.",
-  "I go out of my way to get things I want.",
-  "I often act on the spur of the moment.",
-  "I feel anxious when I am uncertain about the future.",
-  "I am always willing to try something new if I think it will be fun.",
-  "I get nervous when I think about what could go wrong.",
-  "I am motivated by the possibility of gaining rewards.",
-  "I often do things to get attention.",
-  "I feel uneasy when I have to make decisions.",
-  "I enjoy taking risks.",
-  "I get upset when I don't get what I want.",
-  "I am quick to respond to opportunities.",
-  "I worry about bad things happening.",
-  "I like to be active and busy.",
-  "I get anxious when I think about the future.",
-  "I am driven to achieve my goals.",
-  "I feel tense when I am under pressure.",
-  "I like to have fun and enjoy life.",
-  "I get nervous in social situations.",
-  "I am persistent in pursuing my goals.",
-  "I feel restless when I have to wait.",
-  "I am easily distracted by things around me."
-];
-function showBISBAS() {
-  participant.timestamps.bisbasStart = new Date().toISOString();
-  document.getElementById('bisbasForm').classList.remove('hidden');
-  const bisbasDiv = document.getElementById('bisbasQuestions');
-  if (bisbasDiv.childElementCount === 0) {
-    bis_bas_questions.forEach((q, i) => {
-      const html = `
-        <div class="question">
-          <label>${i+1}. ${q}
-            <select name="bisbas${i+1}" required>
-              <option value="">Select...</option>
-              <option value="1">1 (Not true)</option>
-              <option value="2">2</option>
-              <option value="3">3</option>
-              <option value="4">4 (Very true)</option>
-            </select>
-          </label>
-        </div>
-      `;
-      bisbasDiv.insertAdjacentHTML('beforeend', html);
-    });
-  }
-}
+// 4. Instructions (formerly after BIS-BAS)
 function showInstructions() {
-  for (let i = 1; i <= 24; i++) {
-    participant.bisbas[`bisbas${i}`] = document.querySelector(`[name="bisbas${i}"]`).value;
-  }
-  participant.bisbasScores = scoreBISBAS(participant.bisbas);
-  participant.timestamps.bisbasEnd = new Date().toISOString();
-  document.getElementById('bisbasForm').classList.add('hidden');
+  participant.timestamps.slotMachineStart = new Date().toISOString(); // Assuming slot machine starts after instructions
   document.getElementById('instructions').classList.remove('hidden');
 }
-function scoreBISBAS(responses) {
-  let scores = {
-    BAS_Drive: [4,13,18,22].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
-    BAS_FunSeeking: [7,12,19,23].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
-    BAS_Reward: [2,9,14,20,24].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0),
-    BIS: [1,3,5,6,8,10,11,15,16,17,21].reduce((sum, i) => sum + Number(responses[`bisbas${i}`]), 0)
-  };
-  scores.interpretation = "Higher scores indicate greater trait levels for each subscale.";
-  return scores;
-}
+
 
 // 5. Slot Machine Game
 function generateTrialOrder() {
@@ -776,14 +708,14 @@ function spin() {
         } else {
             // NO GAIN, NO LOSS condition: User bet on a non-winning shape
             outcome = 'nogain';
-            
+
             // Generate a mixed combination of 'cube' and 'cylinder' that is not all the same
             const baseCombo = Math.random() < 0.5 ? ['cube', 'cube', 'cylinder'] : ['cylinder', 'cylinder', 'cube'];
             // Shuffle the array to randomize positions
             combo = baseCombo.sort(() => Math.random() - 0.5);
 
             wallet += betAmount; // Return the bet
-            
+
             message = `<span class="nogain">No gain, no loss. Your bet is returned.</span>`;
             isReward = 0;
             thumbsDown();
@@ -973,7 +905,6 @@ function finishExperiment() {
   const fileName = `participant_${participant.participantId}_session_${participant.sessionId}_data.json`;
   dlAnchor.setAttribute("download", fileName);
   document.body.appendChild(dlAnchor);
-  dlAnchor.click();
   dlAnchor.remove();
   console.log('Participant Data:', participant);
 }
@@ -997,10 +928,7 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     validateLikedShapes();
   };
-  document.getElementById('bisbasForm').onsubmit = function(event) {
-    event.preventDefault();
-    showInstructions();
-  };
+
   document.getElementById('affectiveForm').onsubmit = handleAffectiveForm;
   document.getElementById('memoryForm').onsubmit = handleMemoryForm;
   document.getElementById('finishBtn').onclick = function(event) {
@@ -1012,6 +940,20 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     startGame();
   };
+
+  // Add skip button functionality for Participant form
+  const participantForm = document.getElementById('participantForm');
+  const skipButton = document.getElementById('skipParticipantForm');
+  if (participantForm && skipButton) {
+    skipButton.onclick = function() {
+      // Add timestamp for skipping
+      if (!participant.timestamps.participantInfoEnd) {
+        participant.timestamps.participantInfoEnd = new Date().toISOString();
+      }
+      participantForm.classList.add('hidden');
+      showLikedShapes(); // Move to the next step in the flow
+    };
+  }
 });
 </script>
 </body>
