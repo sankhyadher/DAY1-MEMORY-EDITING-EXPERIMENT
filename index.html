@@ -1,4 +1,7 @@
+# Display the HTML content
+from IPython.display import HTML
 
+html_content = r"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -11,7 +14,7 @@
     .hidden { display: none !important; }
     .center { text-align: center; }
     .slot-machine-layout { display: flex; flex-direction: row; gap: 32px; align-items: flex-start; }
-    .slot-machine { background: linear-gradient(135deg, #3b1e00 60%, #a67c52 100%); border-radius: 24px; padding: 32px 24px 24px 24px; box-shadow: 0 8px 32px #000a; margin-bottom: 24px; flex: 3; position: relative;}
+    .slot-machine { background: linear-gradient(135deg, #3b1e00 60%, #a67c52 100%); border-radius: 24px; padding: 32px 24px 24px 24px; box-shadow: 0 8px 32px rgba(0,0,0,0.6); margin-bottom: 24px; flex: 3; position: relative;}
     .slot-machine::before {
       content: ""; position: absolute; left: 0; top: 0; width: 100%; height: 100%;
       background: repeating-linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05) 20px, transparent 40px, transparent 60px);
@@ -21,22 +24,22 @@
     .reel {
       width: 140px; height: 140px; background: radial-gradient(circle, #fffbe6 60%, #f1c40f 100%);
       border: 6px solid #bfa145; border-radius: 16px; display: flex; align-items: center; justify-content: center;
-      font-size: 5rem; box-shadow: 0 2px 12px #000a, 0 0 24px #fff70066 inset;
+      font-size: 5rem; box-shadow: 0 2px 12px rgba(0,0,0,0.6), 0 0 24px rgba(255,247,0,0.4) inset;
       transition: box-shadow 0.2s;
     }
     .reels.sparkle .reel {
-      box-shadow: 0 0 32px #fff700, 0 0 48px #fff70099, 0 0 24px #fff70066 inset;
+      box-shadow: 0 0 32px #fff700, 0 0 48px rgba(255,247,0,0.6), 0 0 24px rgba(255,247,0,0.4) inset;
       animation: sparkle-reel 0.4s alternate infinite;
     }
     @keyframes sparkle-reel {
-      0% { box-shadow: 0 0 32px #fff700, 0 0 48px #fff70099, 0 0 24px #fff70066 inset; }
-      100% { box-shadow: 0 0 64px #fff700, 0 0 96px #fff700cc, 0 0 48px #fff70099 inset; }
+      0% { box-shadow: 0 0 32px #fff700, 0 0 48px rgba(255,247,0,0.6), 0 0 24px rgba(255,247,0,0.4) inset; }
+      100% { box-shadow: 0 0 64px #fff700, 0 0 96px rgba(255,247,0,0.8), 0 0 48px rgba(255,247,0,0.6) inset; }
     }
     .chips { display: flex; justify-content: center; gap: 18px; margin-bottom: 18px; }
     .chip {
       width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle, #ffe066 60%, #e1b700 100%);
       border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.3rem; cursor: pointer; transition: border 0.2s, box-shadow 0.2s;
-      box-shadow: 0 2px 10px #000a;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
       position: relative;
       margin: 0 2px;
       color: #542d0a; /* Color for the numbers on the chips */
@@ -46,7 +49,7 @@
     .spin-btn {
       background: linear-gradient(90deg, #ff2d2d 60%, #ffb300 100%);
       color: #fff; padding: 16px 40px; border: none; border-radius: 12px; font-size: 1.5rem; cursor: pointer; margin-bottom: 14px;
-      box-shadow: 0 2px 8px #000a, 0 0 16px #fff70055;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.6), 0 0 16px rgba(255,247,0,0.33);
       font-family: 'Segoe UI', Arial, sans-serif;
       font-weight: bold;
       letter-spacing: 1px;
@@ -54,7 +57,7 @@
     }
     .spin-btn:disabled { background: #888; filter: grayscale(0.5); }
     .total-winnings, .wallet {
-      background: #222; color: #ffd700; font-size: 1.3rem; padding: 8px 32px; border-radius: 10px; margin: 0 auto 16px auto; display: inline-block; font-weight: bold; box-shadow: 0 2px 8px #000a;
+      background: #222; color: #ffd700; font-size: 1.3rem; padding: 8px 32px; border-radius: 10px; margin: 0 auto 16px auto; display: inline-block; font-weight: bold; box-shadow: 0 2px 8px rgba(0,0,0,0.6);
       text-shadow: 0 0 6px #fff700;
     }
     .wallet { color: #00ffae; margin-left: 16px; }
@@ -64,20 +67,20 @@
     .win-amount { color: #ffd700; font-weight: bold; font-size: 1.2rem; text-shadow: 0 0 8px #fff700; }
     .instructions, .memoryForm, .probe, .consent, .affectiveForm { background: #222; border-radius: 16px; padding: 32px 24px; margin-bottom: 28px; }
     .question { margin-bottom: 18px; }
-    .leaderboard { background: #1a1203; border-radius: 16px; padding: 18px 16px; max-width: 260px; margin: 0; box-shadow: 0 2px 12px #000a; flex: 1;}
+    .leaderboard { background: #1a1203; border-radius: 16px; padding: 18px 16px; max-width: 260px; margin: 0; box-shadow: 0 2px 12px rgba(0,0,0,0.6); flex: 1;}
     .leaderboard h3 { margin: 0 0 10px 0; color: #ffd700; text-align: center; letter-spacing: 1px; }
     .leaderboard-list { list-style: none; padding: 0; margin: 0; }
     .leaderboard-list li { padding: 6px 0; font-size: 1.1rem; }
     .player { color: #fff700; font-weight: bold; background: #3b2e00; border-radius: 6px; padding: 2px 8px;}
     .sparkle-text {
       animation: sparkle-text 0.7s alternate infinite;
-      text-shadow: 0 0 12px #fff700, 0 0 24px #fff70099;
+      text-shadow: 0 0 12px #fff700, 0 0 24px rgba(255,247,0,0.6);
     }
     @keyframes sparkle-text {
-      0% { text-shadow: 0 0 12px #fff700, 0 0 24px #fff70099; }
-      100% { text-shadow: 0 0 32px #fff700, 0 0 48px #fff700cc; }
+      0% { text-shadow: 0 0 12px #fff700, 0 0 24px rgba(255,247,0,0.6); }
+      100% { text-shadow: 0 0 32px #fff700, 0 0 48px rgba(255,247,0,0.8); }
     }
-    .reels-bg { background: repeating-linear-gradient(135deg, #ffd70022 0 8px, #fff0 8px 16px); border-radius: 20px;
+    .reels-bg { background: repeating-linear-gradient(135deg, rgba(255,215,0,0.13) 0 8px, rgba(255,240,0,0) 8px 16px); border-radius: 20px;
       padding: 10px; margin-bottom: 10px; position: relative;
     }
     .coin-shower .coin {
@@ -116,7 +119,7 @@
     .liked-symbol-opt.selected {
       border: 2px solid #0f0;
       background: #333;
-      box-shadow: 0 0 12px #0f0, 0 0 24px #0f08;
+      box-shadow: 0 0 12px #0f0, 0 0 24px rgba(0,255,0,0.5);
     }
     @media (max-width: 900px) {
       .slot-machine-layout { flex-direction: column; }
@@ -128,7 +131,7 @@
       display: block;
       margin: 0 auto;
     }
-        .symbols-list { display: flex; gap: 16px; margin-top: 8px; }
+    .symbols-list { display: flex; gap: 16px; margin-top: 8px; }
     .symbol-opt { border: 2px solid #666; border-radius: 8px; padding: 6px; background: #222; cursor: pointer; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;}
     .symbol-opt.selected { border: 2px solid #0f0; background: #444; }
     .probe-pair { display: flex; gap: 32px; justify-content: center; margin: 18px 0; }
@@ -391,7 +394,7 @@ const shapeSVGs = {
   'sphere': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><radialGradient id="g1" cx="50%" cy="40%" r="50%"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3f"/></radialGradient></defs><ellipse cx="40" cy="40" rx="32" ry="32" fill="url(#g1)" stroke="#5c2a7c" stroke-width="4"/></svg>`,
   'cube': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#3a6"/></linearGradient></defs><rect x="16" y="16" width="48" height="48" rx="8" fill="url(#g2)" stroke="#2a7c5c" stroke-width="4"/></svg>`,
   'pyramid': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#a3f"/></linearGradient></defs><polygon points="40,12 68,68 12,68" fill="url(#g3)" stroke="#5c2a7c" stroke-width="4"/></svg>`,
-  'cylinder': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#3a6"/></linearGradient></defs><ellipse cx="40" cy="20" rx="24" ry="10" fill="#fff" opacity="0.5"/><rect x="16" y="20" width="48" height="40" rx="24" fill="url(#g4)" stroke="#2a7c5c" stroke-width="4"/><ellipse cx="40" cy="60" rx="24" ry="10" fill="#3a6" stroke="#2a7c5c" stroke-width="4"/></svg>`,
+  'cylinder': `<svg width="80" height="80" viewBox="0 0 80 80"><defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff"/><stop offset="100%" stop-color="#3a6"/></linearGradient></defs><ellipse cx="40" cy="20" rx="24" ry="10" fill="#fff" opacity="0.5"/><rect x="16" y="20" width="48" height="40" rx="24" fill="url(#g4)" stroke="#2a7c5c" stroke-width="4"/><ellipse cx="40" cy="60" rx="24" ry="10" fill="#3a6" stroke="#2a7c7c" stroke-width="4"/></svg>`,
   'hexPrism': `<svg width="40" height="40" viewBox="0 0 80 80"><polygon points="20,30 40,12 60,30 60,50 40,68 20,50" fill="#fa3" stroke="#fa3" stroke-width="4"/></svg>`,
   'starPrism': `<svg width="40" height="40" viewBox="0 0 80 80"><polygon points="40,12 47,32 68,32 51,46 57,66 40,54 23,66 29,46 12,32 33,32" fill="#fa3" stroke="#fa3" stroke-width="4"/></svg>`,
   'capsule': `<svg width="40" height="40" viewBox="0 0 80 80"><rect x="20" y="24" width="40" height="32" rx="20" fill="#fff" stroke="#fa3" stroke-width="4"/><ellipse cx="40" cy="24" rx="20" ry="12" fill="#fa3"/><ellipse cx="40" cy="56" rx="20" ry="12" fill="#fa3"/></svg>`
@@ -899,13 +902,16 @@ function finishExperiment() {
   participant.timestamps.experimentEnd = new Date().toISOString();
   document.getElementById('probeTask').classList.add('hidden');
   document.getElementById('thankYou').classList.remove('hidden');
+
+  // Trigger download
   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(participant, null, 2)); // Prettify JSON
   const dlAnchor = document.createElement('a');
   dlAnchor.setAttribute("href", dataStr);
   const fileName = `participant_${participant.participantId}_session_${participant.sessionId}_data.json`;
   dlAnchor.setAttribute("download", fileName);
-  document.body.appendChild(dlAnchor);
+  dlAnchor.click(); // Trigger the download
   dlAnchor.remove();
+
   console.log('Participant Data:', participant);
 }
 
@@ -958,3 +964,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+"""
+
+display(HTML(html_content))
